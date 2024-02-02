@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fastapi_users
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    # networks:
+    #   - myapp-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      timeout: 10s
+      retries: 5
+      interval: 10s
+
+  fastapi-app:
+    # image: fastapi-app
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "mysql+pymysql://user:password@db/fastapi_users"
+    # networks:
+    #   - myapp-network
+    restart: always
+
+volumes:
+  mysql-data:
+
+# networks:
+#   myapp-network:
+#     driver: bridge
